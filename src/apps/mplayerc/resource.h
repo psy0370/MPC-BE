@@ -1813,14 +1813,18 @@
 #define IDS_AG_WINDOW_TO_PRIMARYSCREEN  44102
 #define IDS_EXTERNAL                    44103
 #define IDS_SUB_SAVE_EXTERNAL_STYLE_FILE 44104
+#define IDS_PLAY_LOOPMODE_FILE          44105
+#define IDS_PLAY_LOOPMODE_PLAYLIST      44106
+
+#define IDC_COMBO_LOOPMODE              22054
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        44105
+#define _APS_NEXT_RESOURCE_VALUE        44107
 #define _APS_NEXT_COMMAND_VALUE         1204
-#define _APS_NEXT_CONTROL_VALUE         22054
+#define _APS_NEXT_CONTROL_VALUE         22055
 #define _APS_NEXT_SYMED_VALUE           24044
 #endif
 #endif

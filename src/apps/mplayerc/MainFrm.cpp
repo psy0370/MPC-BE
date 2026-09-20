@@ -3118,7 +3118,7 @@ bool CMainFrame::GraphEventComplete()
 	if (m_abRepeatPositionAEnabled || m_abRepeatPositionBEnabled) {
 		PerformABRepeat();
 	}
-	else if (m_wndPlaylistBar.GetCount(true) <= 1) {
+	else if (m_wndPlaylistBar.GetCount(true) <= 1 || s.nLoopMode == 0) {
 		m_nLoops++;
 
 		if (DoAfterPlaybackEvent()) {

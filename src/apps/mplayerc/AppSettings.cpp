@@ -465,6 +465,7 @@ void CAppSettings::ResetSettings()
 	fMute = false;
 	nLoops = 1;
 	fLoopForever = false;
+	nLoopMode = 1; // default: playlist (matches current MPC-BE behavior)
 	fRewind = false;
 	nVolumeStep = 5;
 	nSpeedStep = 0; // auto
@@ -913,6 +914,7 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 
 	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_LOOPNUM, nLoops);
 	profile.ReadBool(IDS_R_SETTINGS, IDS_RS_LOOP, fLoopForever);
+	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_LOOPMODE, nLoopMode);
 	profile.ReadBool(IDS_R_SETTINGS, IDS_RS_REWIND, fRewind);
 	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_VOLUME_STEP, nVolumeStep, 1, 10);
 	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_SPEED_STEP, nSpeedStep);
@@ -1641,6 +1643,7 @@ void CAppSettings::SaveSettings()
 
 	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_LOOPNUM, nLoops);
 	profile.WriteBool(IDS_R_SETTINGS, IDS_RS_LOOP, fLoopForever);
+	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_LOOPMODE, nLoopMode);
 	profile.WriteBool(IDS_R_SETTINGS, IDS_RS_REWIND, fRewind);
 	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_VOLUME_STEP, nVolumeStep);
 	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_SPEED_STEP, nSpeedStep);

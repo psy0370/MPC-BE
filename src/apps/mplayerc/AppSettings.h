@@ -585,6 +585,7 @@ public:
 	int				nBalance;
 	int				nLoops;
 	bool			fLoopForever;
+	int				nLoopMode; // 0 - repeat current file, 1 - repeat whole playlist
 	bool			fRewind;
 	int				nSpeedStep;
 	bool			bSpeedNotReset;

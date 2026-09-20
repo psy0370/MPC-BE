@@ -42,6 +42,7 @@ void CPPagePlayback::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RADIO1, m_iLoopForever);
 	DDX_Control(pDX, IDC_EDIT1, m_loopnumctrl);
 	DDX_Text(pDX, IDC_EDIT1, m_nLoops);
+	DDX_Control(pDX, IDC_COMBO_LOOPMODE, m_cbLoopMode);
 	DDX_Check(pDX, IDC_CHECK1, m_fRewind);
 
 	DDX_CBIndex(pDX, IDC_COMBOVOLUME, m_nVolumeStep);
@@ -84,6 +85,10 @@ BOOL CPPagePlayback::OnInitDialog()
 	m_iLoopForever	= s.fLoopForever ? 1 : 0;
 	m_nLoops		= s.nLoops;
 	m_fRewind		= s.fRewind;
+
+	m_cbLoopMode.AddString(ResStr(IDS_PLAY_LOOPMODE_FILE));
+	m_cbLoopMode.AddString(ResStr(IDS_PLAY_LOOPMODE_PLAYLIST));
+	m_cbLoopMode.SetCurSel(s.nLoopMode);
 
 	CStringW str;
 	for (int idx = 1; idx <= 10; idx++) {
@@ -136,6 +141,7 @@ BOOL CPPagePlayback::OnApply()
 
 	s.fLoopForever = !!m_iLoopForever;
 	s.nLoops = m_nLoops;
+	s.nLoopMode = m_cbLoopMode.GetCurSel();
 	s.fRewind = !!m_fRewind;
 	s.nAudioWindowMode = m_cbAudioWindowMode.GetCurSel();
 	s.nAddSimilarFiles = m_cbAddSimilarFiles.GetCurSel();

@@ -62,6 +62,7 @@
 #define IDS_RS_CONTROLSTATE					L"ControlState"
 #define IDS_RS_LOOP							L"Loop"
 #define IDS_RS_LOOPNUM						L"LoopNum"
+#define IDS_RS_LOOPMODE						L"LoopMode"
 #define IDS_RS_ENABLESUBTITLES				L"EnableSubtitles"
 #define IDS_RS_FORCEDSUBTITLES				L"ForcedSubtitles"
 #define IDS_RS_PRIORITIZEEXTERNALSUBTITLES	L"PrioritizeExternalSubtitles"

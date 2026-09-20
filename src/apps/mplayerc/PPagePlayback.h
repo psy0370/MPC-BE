@@ -37,6 +37,7 @@ public:
 	int			m_iLoopForever = 0;
 	CEdit		m_loopnumctrl;
 	int			m_nLoops       = 0;
+	CComboBox	m_cbLoopMode;
 	BOOL		m_fRewind      = FALSE;
 
 	int			m_nVolumeStep  = 1;
