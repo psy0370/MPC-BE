@@ -259,6 +259,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_FILE_OPENISO, OnUpdateFileOpen)
 	ON_COMMAND(ID_FILE_OPENDEVICE, OnFileOpenDevice)
 	ON_UPDATE_COMMAND_UI(ID_FILE_OPENDEVICE, OnUpdateFileOpen)
+	ON_COMMAND(ID_FILE_OPENDLNA, OnFileOpenDlna)
+	ON_UPDATE_COMMAND_UI(ID_FILE_OPENDLNA, OnUpdateFileOpen)
 	ON_COMMAND_RANGE(ID_FILE_OPEN_CD_START, ID_FILE_OPEN_CD_END, OnFileOpenCD)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_FILE_OPEN_CD_START, ID_FILE_OPEN_CD_END, OnUpdateFileOpen)
 	ON_COMMAND(ID_FILE_REOPEN, OnFileReOpen)
@@ -10534,6 +10536,20 @@ void CMainFrame::OnShowHistory()
 	}
 	else {
 		m_pHistoryDlg->ShowWindow(SW_SHOW);
+	}
+}
+
+void CMainFrame::OnFileOpenDlna()
+{
+	if (!m_pDlnaBrowserDlg) {
+		m_pDlnaBrowserDlg.reset(new CDlnaBrowserDlg(this));
+		m_pDlnaBrowserDlg->Create(IDD_DLNA_BROWSER);
+	}
+	else if (m_pDlnaBrowserDlg->IsWindowVisible()) {
+		m_pDlnaBrowserDlg->SetActiveWindow();
+	}
+	else {
+		m_pDlnaBrowserDlg->ShowWindow(SW_SHOW);
 	}
 }
 

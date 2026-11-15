@@ -1350,6 +1350,17 @@ BEGIN
     CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,4,23,268,142,WS_EX_CLIENTEDGE
 END
 
+IDD_DLNA_BROWSER DIALOGEX 0, 0, 300, 200
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "DLNA Media Servers"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Up",IDC_BUTTON1,4,4,40,14
+    PUSHBUTTON      "Refresh",IDC_BUTTON2,48,4,50,14
+    EDITTEXT        IDC_EDIT1,102,5,194,13,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,4,23,292,173,WS_EX_CLIENTEDGE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1656,6 +1667,7 @@ BEGIN
         MENUITEM "&Open File/URL...",           ID_FILE_OPENFILEURL
         MENUITEM "Open &DVD/Blu-ray...",        ID_FILE_OPENDVD
         MENUITEM "Open De&vice...",             ID_FILE_OPENDEVICE
+        MENUITEM "Open DLNA Server...",         ID_FILE_OPENDLNA
         MENUITEM "Open Directory...",           ID_FILE_OPENDIRECTORY
         MENUITEM "Open &Iso image...",          ID_FILE_OPENISO
         MENUITEM "O&pen Disc",                  ID_SUBMENU_OPENDISC
@@ -1797,6 +1809,7 @@ BEGIN
             MENUITEM "&Open File/URL...",           ID_FILE_OPENFILEURL
             MENUITEM "Open &DVD/Blu-ray...",        ID_FILE_OPENDVD
             MENUITEM "Open De&vice...",             ID_FILE_OPENDEVICE
+            MENUITEM "Open DLNA Server...",         ID_FILE_OPENDLNA
             MENUITEM "Open Directory...",           ID_FILE_OPENDIRECTORY
             MENUITEM "Open &Iso image...",          ID_FILE_OPENISO
             MENUITEM "O&pen Disc",                  ID_SUBMENU_OPENDISC
@@ -1928,6 +1941,7 @@ BEGIN
             MENUITEM "&Open File/URL...",           ID_FILE_OPENFILEURL
             MENUITEM "Open &DVD/Blu-ray...",        ID_FILE_OPENDVD
             MENUITEM "Open De&vice...",             ID_FILE_OPENDEVICE
+            MENUITEM "Open DLNA Server...",         ID_FILE_OPENDLNA
             MENUITEM "Open Directory...",           ID_FILE_OPENDIRECTORY
             MENUITEM "Open &Iso image...",          ID_FILE_OPENISO
             MENUITEM "O&pen Disc",                  ID_SUBMENU_OPENDISC
@@ -3149,6 +3163,12 @@ BEGIN
     IDS_ADDTOPLS_FROMDIR_NONE "nothing"
     IDS_PLAY_LOOPMODE_FILE  "File"
     IDS_PLAY_LOOPMODE_PLAYLIST "Playlist"
+    IDS_DLNA_COL_NAME       "Name"
+    IDS_DLNA_COL_DURATION   "Duration"
+    IDS_DLNA_FOLDER         "<Folder>"
+    IDS_DLNA_SERVERS        "Media servers"
+    IDS_DLNA_SEARCHING      "Searching for media servers..."
+    IDS_DLNA_BROWSE_FAILED  "Failed to browse the media server (0x%08X)."
 END
 
 STRINGTABLE

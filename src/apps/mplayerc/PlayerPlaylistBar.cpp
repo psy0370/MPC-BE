@@ -2331,6 +2331,14 @@ void CPlayerPlaylistBar::Append(std::list<CString>& fns, const bool bMulti, CSub
 	curPlayList.m_nSelected_idx = INT_MAX;
 }
 
+void CPlayerPlaylistBar::Open(const CFileItemList& fis)
+{
+	SelectDefaultPlaylist();
+
+	Empty();
+	Append(fis);
+}
+
 void CPlayerPlaylistBar::Append(const CFileItemList& fis)
 {
 	if (GetCurTab().type == PL_EXPLORER) {

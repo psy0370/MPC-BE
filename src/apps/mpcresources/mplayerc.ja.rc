@@ -1352,6 +1352,17 @@ BEGIN
     CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,4,23,268,142,WS_EX_CLIENTEDGE
 END
 
+IDD_DLNA_BROWSER DIALOGEX 0, 0, 300, 200
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "DLNA メディアサーバー"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "上へ",IDC_BUTTON1,4,4,40,14
+    PUSHBUTTON      "更新",IDC_BUTTON2,48,4,50,14
+    EDITTEXT        IDC_EDIT1,102,5,194,13,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,4,23,292,173,WS_EX_CLIENTEDGE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1658,6 +1669,7 @@ BEGIN
         MENUITEM "ファイル/URL を開く(&O)...",     ID_FILE_OPENFILEURL
         MENUITEM "DVD/BD を開く(&D)...",   ID_FILE_OPENDVD
         MENUITEM "デバイスを開く(&V)...",        ID_FILE_OPENDEVICE
+        MENUITEM "DLNA サーバーを開く...",        ID_FILE_OPENDLNA
         MENUITEM "ディレクトリを開く...",                ID_FILE_OPENDIRECTORY
         MENUITEM "ISO イメージを開く(&I)...",          ID_FILE_OPENISO
         MENUITEM "ディスクを開く(&P)",                 ID_SUBMENU_OPENDISC
@@ -1799,6 +1811,7 @@ BEGIN
             MENUITEM "ファイル/URL を開く(&O)...",     ID_FILE_OPENFILEURL
             MENUITEM "DVD/BD を開く(&D)...",   ID_FILE_OPENDVD
             MENUITEM "デバイスを開く(&V)...",        ID_FILE_OPENDEVICE
+            MENUITEM "DLNA サーバーを開く...",        ID_FILE_OPENDLNA
             MENUITEM "ディレクトリを開く...",                ID_FILE_OPENDIRECTORY
             MENUITEM "ISO イメージを開く(&I)...",          ID_FILE_OPENISO
             MENUITEM "ディスクを開く(&P)",                 ID_SUBMENU_OPENDISC
@@ -1930,6 +1943,7 @@ BEGIN
             MENUITEM "ファイル/URL を開く(&O)...",     ID_FILE_OPENFILEURL
             MENUITEM "DVD/BD を開く(&D)...",   ID_FILE_OPENDVD
             MENUITEM "デバイスを開く(&V)...",        ID_FILE_OPENDEVICE
+            MENUITEM "DLNA サーバーを開く...",        ID_FILE_OPENDLNA
             MENUITEM "ディレクトリを開く...",                ID_FILE_OPENDIRECTORY
             MENUITEM "ISO イメージを開く(&I)...",          ID_FILE_OPENISO
             MENUITEM "ディスクを開く(&P)",                  ID_SUBMENU_OPENDISC
@@ -3133,6 +3147,12 @@ BEGIN
     IDS_ADDTOPLS_FROMDIR_NONE "なし"
     IDS_PLAY_LOOPMODE_FILE  "ファイル"
     IDS_PLAY_LOOPMODE_PLAYLIST "プレイリスト"
+    IDS_DLNA_COL_NAME       "名前"
+    IDS_DLNA_COL_DURATION   "長さ"
+    IDS_DLNA_FOLDER         "<フォルダー>"
+    IDS_DLNA_SERVERS        "メディアサーバー"
+    IDS_DLNA_SEARCHING      "メディアサーバーを検索しています..."
+    IDS_DLNA_BROWSE_FAILED  "メディアサーバーの参照に失敗しました (0x%08X)。"
 END
 
 STRINGTABLE

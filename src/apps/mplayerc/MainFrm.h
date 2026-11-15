@@ -42,6 +42,7 @@
 #include "PlayerYtDlp.h"
 #include "SvgHelper.h"
 #include "HistoryDlg.h"
+#include "DlnaBrowserDlg.h"
 
 #include "mplayerc.h"
 #include "HistoryFile.h"
@@ -806,6 +807,7 @@ private: // control bar embedded members
 	std::vector<CSizingControlBar*> m_dockingbarsVisible;
 
 	std::unique_ptr<CHistoryDlg> m_pHistoryDlg;
+	std::unique_ptr<CDlnaBrowserDlg> m_pDlnaBrowserDlg;
 
 	CFileDropTarget m_fileDropTarget;
 	// TODO
@@ -948,6 +950,7 @@ public:
 	afx_msg void OnFileOpenDVD();
 	afx_msg void OnFileOpenIso();
 	afx_msg void OnFileOpenDevice();
+	afx_msg void OnFileOpenDlna();
 	afx_msg void OnFileOpenCD(UINT nID);
 	afx_msg void OnFileReOpen();
 	afx_msg void OnFileSaveAs();

@@ -363,6 +363,7 @@ public:
 	void Open(std::list<CString>& fns, const bool bMulti, CSubtitleItemList* subs = nullptr, bool bCheck = true);
 	void Append(const CString& fn);
 	void Append(std::list<CString>& fns, const bool bMulti, CSubtitleItemList* subs = nullptr, bool bCheck = true);
+	void Open(const CFileItemList& fis);
 	void Append(const CFileItemList& fis);
 
 	void Open(const CStringW& vdn, const CStringW& adn, const int vinput, const int vchannel, const int ainput);

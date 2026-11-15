@@ -333,6 +333,9 @@
     <ClCompile Include="DiskImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DlnaBrowserDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="DVBChannel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -513,6 +516,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DiskImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DlnaBrowserDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ColorControl.h">

@@ -370,6 +370,7 @@
 #define ID_PLAY_REPEAT_AB               1201
 #define ID_PLAY_REPEAT_AB_MARK_A        1202
 #define ID_PLAY_REPEAT_AB_MARK_B        1203
+#define ID_FILE_OPENDLNA                1204
 #define ID_ADDTOPLAYLISTROMCLIPBOARD    1210
 #define ID_MOVEWINDOWBYVIDEO_ONOFF      1211
 #define ID_PLAYLIST_OPENFOLDER          1212
@@ -594,6 +595,7 @@
 #define IDD_PLAYLISTNAME                10034
 #define IDD_ADDCOMMAND_DLG              10035
 #define IDD_HISTORY                     10036
+#define IDD_DLNA_BROWSER                10037
 // page for options
 #define IDD_PPAGEPLAYER                 10101
 #define IDD_PPAGEFORMATS                10102
@@ -1815,6 +1817,12 @@
 #define IDS_SUB_SAVE_EXTERNAL_STYLE_FILE 44104
 #define IDS_PLAY_LOOPMODE_FILE          44105
 #define IDS_PLAY_LOOPMODE_PLAYLIST      44106
+#define IDS_DLNA_COL_NAME               44107
+#define IDS_DLNA_COL_DURATION           44108
+#define IDS_DLNA_FOLDER                 44109
+#define IDS_DLNA_SERVERS                44110
+#define IDS_DLNA_SEARCHING              44111
+#define IDS_DLNA_BROWSE_FAILED          44112
 
 #define IDC_COMBO_LOOPMODE              22054
 
@@ -1822,8 +1830,8 @@
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        44107
-#define _APS_NEXT_COMMAND_VALUE         1204
+#define _APS_NEXT_RESOURCE_VALUE        44113
+#define _APS_NEXT_COMMAND_VALUE         1205
 #define _APS_NEXT_CONTROL_VALUE         22055
 #define _APS_NEXT_SYMED_VALUE           24044
 #endif
