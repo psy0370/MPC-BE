@@ -24,9 +24,11 @@
 #include "DSUtil/DXVAState.h"
 #include "DSUtil/FileHandle.h"
 #include "WicUtils.h"
+#include "Misc.h"
 #include "PlayerToolBar.h"
 
 constexpr auto ID_GPU = 99999999;
+constexpr auto ID_REPLAYGAIN = 99999998;
 
 // CPlayerToolBar
 
@@ -52,6 +54,72 @@ CPlayerToolBar::~CPlayerToolBar()
 {
 	if (m_hGPUIcon) {
 		DestroyIcon(m_hGPUIcon);
+	}
+	DestroyReplayGainIcons();
+}
+
+void CPlayerToolBar::DestroyReplayGainIcons()
+{
+	if (m_hRGIcon) {
+		DestroyIcon(m_hRGIcon);
+		m_hRGIcon = nullptr;
+	}
+	if (m_hRGIconDisabled) {
+		DestroyIcon(m_hRGIconDisabled);
+		m_hRGIconDisabled = nullptr;
+	}
+	m_nRGIconWidth = m_nRGIconHeight = 0;
+}
+
+void CPlayerToolBar::LoadReplayGainIcons()
+{
+	DestroyReplayGainIcons();
+
+	CStringA svgData;
+	if (!LoadResource(IDF_SVG_REPLAYGAIN, svgData, L"FILE")) {
+		return;
+	}
+
+	const auto CreateIconFromSvg = [&](CStringA data, HICON& hIcon) {
+		CSvgImage svgImage;
+		if (!svgImage.Load(data.GetBuffer())) {
+			return;
+		}
+
+		int w = 0;
+		int h = m_nButtonHeight;
+		if (HBITMAP hBitmap = svgImage.Rasterize(w, h)) {
+			CImageList imgList;
+			imgList.Create(w, h, ILC_COLOR32 | ILC_MASK, 1, 0);
+			ImageList_Add(imgList.GetSafeHandle(), hBitmap, nullptr);
+
+			hIcon = imgList.ExtractIconW(0);
+			m_nRGIconWidth = w;
+			m_nRGIconHeight = h;
+
+			DeleteObject(hBitmap);
+		}
+	};
+
+	// same colors as the AUD/SUB buttons: active #C0C0C0, disabled = gray * 0.55
+	CreateIconFromSvg(svgData, m_hRGIcon);
+	svgData.Replace("#C0C0C0", "#6A6A6A");
+	CreateIconFromSvg(svgData, m_hRGIconDisabled);
+}
+
+void CPlayerToolBar::SetReplayGainState(int state, double gain_dB, double tagGain_dB)
+{
+	if (m_nReplayGainState == state && m_dReplayGain_dB == gain_dB && m_dReplayGainTag_dB == tagGain_dB) {
+		return;
+	}
+
+	m_nReplayGainState = state;
+	m_dReplayGain_dB = gain_dB;
+	m_dReplayGainTag_dB = tagGain_dB;
+
+	// may be called from the graph thread
+	if (::IsWindow(m_hWnd)) {
+		::InvalidateRect(m_hWnd, nullptr, FALSE);
 	}
 }
 
@@ -299,6 +367,11 @@ void CPlayerToolBar::SwitchTheme()
 
 		DeleteObject(hBitmap);
 		hBitmap = nullptr;
+	}
+
+	// load ReplayGain indicator
+	if (s.bUseDarkTheme) {
+		LoadReplayGainIcons();
 	}
 
 	// load GPU/DXVA indicator
@@ -644,6 +717,32 @@ void CPlayerToolBar::OnCustomDraw(NMHDR *pNMHDR, LRESULT *pResult)
 				}
 			}
 
+			{
+				// ReplayGain indicator: placed like a third button after AUD and SUB
+				CRect rSubBtn;
+				GetItemRect(9, &rSubBtn);
+
+				CRect rVolume;
+				GetItemRect(12, &rVolume);
+
+				m_bRGIconShow = false;
+				m_RGIconRect.SetRectEmpty();
+
+				const HICON hRGIcon = (m_nReplayGainState != RG_STATE_NONE) ? m_hRGIcon : m_hRGIconDisabled;
+				if (hRGIcon) {
+					const int xLeft = rSubBtn.right + (rSubBtn.Width() - m_nRGIconWidth) / 2;
+					const int yTop  = r.CenterPoint().y - (m_nRGIconHeight / 2);
+					const int xLimit = rVolume.left - (bGPUIconShow ? 8 + m_nGPUIconWidth : 0) - 4;
+
+					if (xLeft + m_nRGIconWidth < xLimit) {
+						m_bRGIconShow = true;
+						m_RGIconRect.SetRect(xLeft, yTop, xLeft + m_nRGIconWidth, yTop + m_nRGIconHeight);
+
+						DrawIconEx(dc.m_hDC, xLeft, yTop, hRGIcon, 0, 0, 0, nullptr, DI_NORMAL);
+					}
+				}
+			}
+
 			if (bGPUIconShow) {
 				CRect rSub;
 				GetItemRect(10, &rSub);
@@ -962,6 +1061,21 @@ BOOL CPlayerToolBar::OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 	case ID_GPU:
 		s_strTipText = DXVAState::GetDescription();
 		break;
+	case ID_REPLAYGAIN:
+		if (m_nReplayGainState != RG_STATE_NONE) {
+			const CString mode = ResStr(m_nReplayGainState == RG_STATE_ALBUM ? IDS_REPLAYGAIN_ALBUM : IDS_REPLAYGAIN_TRACK);
+			if (std::abs(m_dReplayGainTag_dB - m_dReplayGain_dB) >= 0.005) {
+				// reduced by clipping prevention: show the tag value and the applied value
+				s_strTipText.Format(L"ReplayGain: %s (%+.2f dB \x2192 %+.2f dB%s)",
+					mode.GetString(), m_dReplayGainTag_dB, m_dReplayGain_dB,
+					ResStr(IDS_REPLAYGAIN_CLIPPED).GetString());
+			} else {
+				s_strTipText.Format(L"ReplayGain: %s (%+.2f dB)", mode.GetString(), m_dReplayGain_dB);
+			}
+		} else {
+			s_strTipText = L"ReplayGain: " + ResStr(IDS_REPLAYGAIN_NOT_APPLIED);
+		}
+		break;
 	default:
 		return FALSE;
 	}
@@ -1005,6 +1119,14 @@ INT_PTR CPlayerToolBar::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 			pTI->hwnd     = m_hWnd;
 			pTI->uId      = id;
 			pTI->rect     = m_GPUIconRect;
+			pTI->lpszText = LPSTR_TEXTCALLBACKW;
+		}
+		else if (m_bRGIconShow && m_RGIconRect.PtInRect(point)) {
+			id = ID_REPLAYGAIN;
+
+			pTI->hwnd     = m_hWnd;
+			pTI->uId      = id;
+			pTI->rect     = m_RGIconRect;
 			pTI->lpszText = LPSTR_TEXTCALLBACKW;
 		}
 	}

@@ -31,6 +31,7 @@
 #include "DSUtil/VideoParser.h"
 #include "DSUtil/GolombBuffer.h"
 #include "DSUtil/std_helper.h"
+#include "DSUtil/ReplayGain.h"
 #include "DSUtil/BitsWriter.h"
 #include <IMediaSideData.h>
 
@@ -1854,6 +1855,8 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 						if (FAILED(GetProperty(L"ROTATION", &prop))) {
 							SetProperty(L"ROTATION", SimpleTag->TagString);
 						}
+					} else {
+						SetReplayGainProperty(static_cast<IDSMPropertyBag*>(this), SimpleTag->TagName, SimpleTag->TagString);
 					}
 				}
 			}

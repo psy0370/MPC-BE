@@ -107,6 +107,8 @@
 #define IDS_RS_AUDIOLEVELSURROUND			L"LevelSurround"
 #define IDS_RS_AUDIOGAIN					L"Gain"
 #define IDS_RS_AUDIOAUTOVOLUMECONTROL		L"AutoVolumeControl"
+#define IDS_RS_AUDIOREPLAYGAINMODE			L"ReplayGainMode"
+#define IDS_RS_AUDIOREPLAYGAINPREVENTCLIP	L"ReplayGainPreventClip"
 #define IDS_RS_AUDIONORMBOOST				L"NormBoost"
 #define IDS_RS_AUDIONORMLEVEL				L"NormLevel"
 #define IDS_RS_AUDIONORMREALEASETIME		L"NormRealeaseTime"

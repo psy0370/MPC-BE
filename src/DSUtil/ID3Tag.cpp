@@ -22,6 +22,7 @@
 #include "ID3Tag.h"
 #include "DSUtil.h"
 #include "DSMPropertyBag.h"
+#include "ReplayGain.h"
 #include "ID3V2PictureType.h"
 
 //
@@ -603,6 +604,17 @@ void SetID3TagProperties(IBaseFilter* pBF, const CID3Tag* pID3tag)
 		}
 		if (Lookup('TALB', str) || Lookup('\0TAL', str)) {
 			pPB->SetProperty(L"ALBUM", str);
+		}
+
+		// ReplayGain: TXXX frames are stored as "description; value"
+		for (const auto& item : pID3tag->TagItems) {
+			if (item->GetTag() == 'TXXX' && item->GetType() == ID3Type::ID3_TYPE_STRING) {
+				const CString value = item->GetValue();
+				const int k = value.Find(L"; ");
+				if (k > 0) {
+					SetReplayGainProperty(pPB, value.Left(k), value.Mid(k + 2));
+				}
+			}
 		}
 	}
 

@@ -24,6 +24,7 @@
 
 #define IDF_SVG_TOOLBAR                 220
 #define IDF_SVG_GPU_INDICATOR           221
+#define IDF_SVG_REPLAYGAIN              222
 #define IDF_SVG_FLYBAR                  223
 #define IDF_SVG_TASKBAR_BUTTONS         224
 #define IDF_SVG_TASKBAR_STATE_ICONS     225
@@ -1823,16 +1824,24 @@
 #define IDS_DLNA_SERVERS                44110
 #define IDS_DLNA_SEARCHING              44111
 #define IDS_DLNA_BROWSE_FAILED          44112
+#define IDS_REPLAYGAIN_OFF              44113
+#define IDS_REPLAYGAIN_TRACK            44114
+#define IDS_REPLAYGAIN_ALBUM            44115
+#define IDS_REPLAYGAIN_AUTO             44116
+#define IDS_REPLAYGAIN_NOT_APPLIED      44117
+#define IDS_REPLAYGAIN_CLIPPED          44118
 
 #define IDC_COMBO_LOOPMODE              22054
+#define IDC_COMBO_REPLAYGAIN            22055
+#define IDC_CHECK_REPLAYGAINCLIP        22056
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        44113
+#define _APS_NEXT_RESOURCE_VALUE        44119
 #define _APS_NEXT_COMMAND_VALUE         1205
-#define _APS_NEXT_CONTROL_VALUE         22055
+#define _APS_NEXT_CONTROL_VALUE         22057
 #define _APS_NEXT_SYMED_VALUE           24044
 #endif
 #endif

@@ -26,6 +26,7 @@
 #include "DSUtil/GolombBuffer.h"
 #include "DSUtil/VideoParser.h"
 #include "DSUtil/CryptoUtils.h"
+#include "DSUtil/ReplayGain.h"
 #include <moreuuids.h>
 #include <basestruct.h>
 
@@ -506,6 +507,26 @@ start:
 					} else {
 						SetProperty(dsmtag, value);
 					}
+					break;
+				}
+			}
+		}
+
+		// ReplayGain (R128_* is for Opus and is used only if REPLAYGAIN_* is missing)
+		static const LPCWSTR rgtags[] = {
+			RG_PROP_TRACK_GAIN, RG_PROP_TRACK_PEAK, RG_PROP_ALBUM_GAIN, RG_PROP_ALBUM_PEAK,
+			L"R128_TRACK_GAIN", L"R128_ALBUM_GAIN"
+		};
+		for (const auto& rgtag : rgtags) {
+			for (auto& pOutputPin : m_pOutputs) {
+				COggSplitterOutputPin* pOggPin = dynamic_cast<COggSplitterOutputPin*>((CBaseOutputPin*)pOutputPin.get());
+				if (!pOggPin) {
+					continue;
+				}
+
+				const CStringW value = pOggPin->GetComment(rgtag);
+				if (!value.IsEmpty()) {
+					SetReplayGainProperty(static_cast<IDSMPropertyBag*>(this), rgtag, value);
 					break;
 				}
 			}

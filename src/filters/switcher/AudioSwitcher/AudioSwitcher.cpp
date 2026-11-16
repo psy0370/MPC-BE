@@ -86,6 +86,8 @@ CFilterApp theApp;
 #define AUDIO_LEVEL_MIN  -10.0
 #define AUDIO_GAIN_MAX    10.0
 #define AUDIO_GAIN_MIN    -3.0
+#define REPLAYGAIN_MAX    20.0
+#define REPLAYGAIN_MIN   -30.0
 
 static struct channel_mode_t {
 	const WORD channels;
@@ -133,6 +135,7 @@ CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	, m_dCenterLevel(1.0)
 	, m_dSurroundLevel(1.0)
 	, m_dGainFactor(1.0)
+	, m_dReplayGainFactor(1.0)
 	, m_bAutoVolumeControl(false)
 	, m_bNormBoost(true)
 	, m_iNormLevel(75)
@@ -346,23 +349,23 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 		audio_samples    = m_AudioNormalizer.Process((float*)audio_data, audio_samples, audio_channels);
 		audio_allsamples = audio_samples * audio_channels;
 	}
-	// Gain (works in place)
-	else if (m_dGainFactor != 1.0) {
+	// Gain + ReplayGain (works in place)
+	else if (const double gainFactor = m_dGainFactor * m_dReplayGainFactor; gainFactor != 1.0) {
 		switch (audio_sampleformat) {
 		case SAMPLE_FMT_U8:
-			gain_uint8(m_dGainFactor, audio_allsamples, (uint8_t*)audio_data);
+			gain_uint8(gainFactor, audio_allsamples, (uint8_t*)audio_data);
 			break;
 		case SAMPLE_FMT_S16:
-			gain_int16(m_dGainFactor, audio_allsamples, (int16_t*)audio_data);
+			gain_int16(gainFactor, audio_allsamples, (int16_t*)audio_data);
 			break;
 		case SAMPLE_FMT_S24:
-			gain_int24(m_dGainFactor, audio_allsamples, audio_data);
+			gain_int24(gainFactor, audio_allsamples, audio_data);
 			break;
 		case SAMPLE_FMT_S32:
-			gain_int32(m_dGainFactor, audio_allsamples, (int32_t*)audio_data);
+			gain_int32(gainFactor, audio_allsamples, (int32_t*)audio_data);
 			break;
 		case SAMPLE_FMT_FLT:
-			gain_float(m_dGainFactor, audio_allsamples, (float*)audio_data);
+			gain_float(gainFactor, audio_allsamples, (float*)audio_data);
 			break;
 		}
 	}
@@ -677,6 +680,14 @@ STDMETHODIMP CAudioSwitcherFilter::SetAudioGain(double dGain_dB)
 {
 	dGain_dB = std::clamp(dGain_dB, AUDIO_GAIN_MIN, AUDIO_GAIN_MAX);
 	m_dGainFactor = decibel2factor(dGain_dB);
+
+	return S_OK;
+}
+
+STDMETHODIMP CAudioSwitcherFilter::SetReplayGain(double dGain_dB)
+{
+	dGain_dB = std::clamp(dGain_dB, REPLAYGAIN_MIN, REPLAYGAIN_MAX);
+	m_dReplayGainFactor = decibel2factor(dGain_dB);
 
 	return S_OK;
 }

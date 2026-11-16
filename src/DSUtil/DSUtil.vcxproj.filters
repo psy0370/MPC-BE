@@ -229,6 +229,9 @@
     <ClInclude Include="ResampleRGB32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ReplayGain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="FileVersion.h">
       <Filter>Header Files</Filter>
     </ClInclude>

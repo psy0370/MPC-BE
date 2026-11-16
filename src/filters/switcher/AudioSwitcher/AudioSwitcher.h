@@ -49,6 +49,7 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7"))
 	double	m_dCenterLevel;
 	double	m_dSurroundLevel;
 	double	m_dGainFactor;
+	double	m_dReplayGainFactor;
 
 	CAudioNormalizer m_AudioNormalizer;
 	bool	m_bAutoVolumeControl;
@@ -94,6 +95,7 @@ public:
 	STDMETHODIMP SetBassRedirect(bool bBassRedirect) override;
 	STDMETHODIMP SetLevels(double dCenterLevel_dB, double dSurroundLevel_dB) override;
 	STDMETHODIMP SetAudioGain(double dGain_dB) override;
+	STDMETHODIMP SetReplayGain(double dGain_dB) override;
 	STDMETHODIMP SetAutoVolumeControl(bool bAutoVolumeControl, bool bNormBoost, int iNormLevel, int iNormRealeaseTime) override;
 	STDMETHODIMP SetOutputFormats(int iSampleFormats) override;
 	STDMETHODIMP_(REFERENCE_TIME) GetAudioTimeShift() override;

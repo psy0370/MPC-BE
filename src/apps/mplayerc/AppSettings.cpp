@@ -631,6 +631,8 @@ void CAppSettings::ResetSettings()
 	dAudioSurround_dB = 0.0;
 	dAudioGain_dB = 0.0;
 	bAudioAutoVolumeControl = false;
+	nAudioReplayGainMode = REPLAYGAIN_AUTO;
+	bAudioReplayGainPreventClip = true;
 	bAudioNormBoost = true;
 	iAudioNormLevel = 75;
 	iAudioNormRealeaseTime = 8;
@@ -1060,6 +1062,8 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadDouble(IDS_R_AUDIO, IDS_RS_AUDIOLEVELSURROUND, dAudioSurround_dB, APP_AUDIOLEVEL_MIN, APP_AUDIOLEVEL_MAX);
 	profile.ReadDouble(IDS_R_AUDIO, IDS_RS_AUDIOGAIN, dAudioGain_dB, APP_AUDIOGAIN_MIN, APP_AUDIOGAIN_MAX);
 	profile.ReadBool(IDS_R_AUDIO, IDS_RS_AUDIOAUTOVOLUMECONTROL, bAudioAutoVolumeControl);
+	profile.ReadInt(IDS_R_AUDIO, IDS_RS_AUDIOREPLAYGAINMODE, nAudioReplayGainMode, REPLAYGAIN_OFF, REPLAYGAIN_COUNT - 1);
+	profile.ReadBool(IDS_R_AUDIO, IDS_RS_AUDIOREPLAYGAINPREVENTCLIP, bAudioReplayGainPreventClip);
 	profile.ReadBool(IDS_R_AUDIO, IDS_RS_AUDIONORMBOOST, bAudioNormBoost);
 	profile.ReadInt(IDS_R_AUDIO, IDS_RS_AUDIONORMLEVEL, iAudioNormLevel, 0, 100);
 	profile.ReadInt(IDS_R_AUDIO, IDS_RS_AUDIONORMREALEASETIME, iAudioNormRealeaseTime, 5, 10);
@@ -1743,6 +1747,8 @@ void CAppSettings::SaveSettings()
 	profile.WriteDouble(IDS_R_AUDIO, IDS_RS_AUDIOLEVELSURROUND, dAudioSurround_dB);
 	profile.WriteDouble(IDS_R_AUDIO, IDS_RS_AUDIOGAIN, dAudioGain_dB);
 	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIOAUTOVOLUMECONTROL, bAudioAutoVolumeControl);
+	profile.WriteInt(IDS_R_AUDIO, IDS_RS_AUDIOREPLAYGAINMODE, nAudioReplayGainMode);
+	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIOREPLAYGAINPREVENTCLIP, bAudioReplayGainPreventClip);
 	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIONORMBOOST, bAudioNormBoost);
 	profile.WriteInt(IDS_R_AUDIO, IDS_RS_AUDIONORMLEVEL, iAudioNormLevel);
 	profile.WriteInt(IDS_R_AUDIO, IDS_RS_AUDIONORMREALEASETIME, iAudioNormRealeaseTime);

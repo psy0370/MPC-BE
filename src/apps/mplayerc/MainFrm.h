@@ -1226,6 +1226,7 @@ public:
 	void		SetClosedCaptions(bool enable);
 	LPCWSTR		GetDVDAudioFormatName(DVD_AudioAttributes& ATR) const;
 	void		SetAudioDelay(REFERENCE_TIME rtShift);
+	void		ApplyReplayGain();
 	void		SetSubtitleDelay(int delay_ms);
 
 	void		SetTimersPlay();

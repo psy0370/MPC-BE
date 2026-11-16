@@ -36,6 +36,7 @@ class CFLACFile : public CAudioFile
 		CStringW comment;
 		CStringW year;
 		CStringW album;
+		std::vector<std::pair<CStringW, CStringW>> replaygain; // REPLAYGAIN_* key/value
 		bool got_vorbis_comments = false;
 	} m_info;
 

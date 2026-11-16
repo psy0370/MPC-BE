@@ -21,6 +21,7 @@
 #include "stdafx.h"
 #include "FLACFile.h"
 #include "DSUtil/ID3V2PictureType.h"
+#include "DSUtil/ReplayGain.h"
 #include <ExtLib/libflac/src/libflac/include/protected/stream_decoder.h>
 
 #define FLAC_DECODER (FLAC__StreamDecoder*)m_pDecoder
@@ -67,6 +68,10 @@ void CFLACFile::SetProperties(IBaseFilter* pBF)
 			pPB->SetProperty(L"AUTH", m_info.artist);
 			pPB->SetProperty(L"DESC", m_info.comment);
 			pPB->SetProperty(L"ALBUM", m_info.album);
+
+			for (const auto& [key, value] : m_info.replaygain) {
+				SetReplayGainProperty(pPB, key, value);
+			}
 		}
 	}
 
@@ -274,6 +279,15 @@ void CFLACFile::UpdateFromMetadata(void* pBuffer)
 						}
 						if (!Performer.IsEmpty() && m_info.artist.IsEmpty()) {
 							m_info.artist = Performer;
+						}
+					}
+				} else {
+					const int k = VorbisTag.Find(L'=');
+					if (k > 0) {
+						CStringW key = VorbisTag.Left(k);
+						key.Trim().MakeUpper();
+						if (StartsWith(key, L"REPLAYGAIN_")) {
+							m_info.replaygain.emplace_back(key, VorbisTag.Mid(k + 1));
 						}
 					}
 				}

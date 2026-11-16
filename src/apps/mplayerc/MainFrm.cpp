@@ -32,6 +32,7 @@
 #include "DSUtil/std_helper.h"
 #include "DSUtil/UrlParser.h"
 #include "DSUtil/NullRenderers.h"
+#include "DSUtil/ReplayGain.h"
 #include "OpenDlg.h"
 #include "SaveTaskDlg.h"
 #include "GoToDlg.h"
@@ -4915,6 +4916,7 @@ void CMainFrame::OnFilePostCloseMedia()
 
 	SetToolBarAudioButton();
 	SetToolBarSubtitleButton();
+	m_wndToolBar.SetReplayGainState(CPlayerToolBar::RG_STATE_NONE, 0.0, 0.0);
 
 	// close popup menus
 	SendMessageW(WM_CANCELMODE);
@@ -8950,6 +8952,80 @@ void CMainFrame::SetAudioDelay(REFERENCE_TIME rtShift)
 	}
 }
 
+void CMainFrame::ApplyReplayGain()
+{
+	CComQIPtr<IAudioSwitcherFilter> pASF = m_pSwitcherFilter.p;
+	if (!pASF) {
+		m_wndToolBar.SetReplayGainState(CPlayerToolBar::RG_STATE_NONE, 0.0, 0.0);
+		return;
+	}
+
+	const CAppSettings& s = AfxGetAppSettings();
+	double gain_dB = 0.0;
+	double tagGain_dB = 0.0;
+	int rgState = CPlayerToolBar::RG_STATE_NONE;
+
+	// the AudioSwitcher ignores the gain while auto volume control is on
+	if (s.nAudioReplayGainMode != REPLAYGAIN_OFF && !s.bAudioAutoVolumeControl
+			&& m_pGB && GetPlaybackMode() == PM_FILE) {
+		struct {
+			double gain = 0.0;
+			double peak = 0.0;
+			bool bGain  = false;
+			bool bPeak  = false;
+		} track, album;
+
+		BeginEnumFilters(m_pGB, pEF, pBF) {
+			if (!CheckMainFilter(pBF)) {
+				continue;
+			}
+
+			if (CComQIPtr<IPropertyBag> pPB = pBF.p) {
+				const auto Read = [&](LPCWSTR key, double& value) {
+					CComVariant var;
+					return SUCCEEDED(pPB->Read(CComBSTR(key), &var, nullptr))
+						&& var.vt == VT_BSTR
+						&& ParseReplayGainValue(var.bstrVal, value);
+				};
+
+				track.bGain = Read(RG_PROP_TRACK_GAIN, track.gain);
+				track.bPeak = Read(RG_PROP_TRACK_PEAK, track.peak);
+				album.bGain = Read(RG_PROP_ALBUM_GAIN, album.gain);
+				album.bPeak = Read(RG_PROP_ALBUM_PEAK, album.peak);
+
+				if (track.bGain || album.bGain) {
+					break;
+				}
+			}
+		}
+		EndEnumFilters;
+
+		// Auto: album gain for sequential playback, track gain when shuffled (like foobar2000)
+		const bool bAlbum = s.nAudioReplayGainMode == REPLAYGAIN_ALBUM
+			|| (s.nAudioReplayGainMode == REPLAYGAIN_AUTO && !m_wndPlaylistBar.IsShuffle());
+
+		// fall back to the other gain if the preferred one is missing
+		const auto& rg = bAlbum ? (album.bGain ? album : track) : (track.bGain ? track : album);
+
+		if (rg.bGain) {
+			gain_dB = rg.gain;
+			tagGain_dB = rg.gain;
+			rgState = (&rg == &album) ? CPlayerToolBar::RG_STATE_ALBUM : CPlayerToolBar::RG_STATE_TRACK;
+
+			if (s.bAudioReplayGainPreventClip && rg.bPeak && rg.peak > 0.0) {
+				const double maxGain_dB = -20.0 * std::log10(rg.peak);
+				gain_dB = std::min(gain_dB, maxGain_dB);
+			}
+
+			DLog(L"CMainFrame::ApplyReplayGain() : %s gain %.2f dB, peak %.6f -> %.2f dB",
+				(&rg == &album) ? L"album" : L"track", rg.gain, rg.bPeak ? rg.peak : 0.0, gain_dB);
+		}
+	}
+
+	pASF->SetReplayGain(gain_dB);
+	m_wndToolBar.SetReplayGainState(rgState, gain_dB, tagGain_dB);
+}
+
 void CMainFrame::SetSubtitleDelay(int delay_ms)
 {
 	if (!m_pCAP && !m_pDVS) {
@@ -9425,6 +9501,7 @@ void CMainFrame::OnAutoVolumeControl()
 
 		s.bAudioAutoVolumeControl = !s.bAudioAutoVolumeControl;
 		pASF->SetAutoVolumeControl(s.bAudioAutoVolumeControl, s.bAudioNormBoost, s.iAudioNormLevel, s.iAudioNormRealeaseTime);
+		ApplyReplayGain(); // updates the RG indicator
 
 		CString osdMessage = ResStr(s.bAudioAutoVolumeControl ? IDS_OSD_AUTOVOLUMECONTROL_ON : IDS_OSD_AUTOVOLUMECONTROL_OFF);
 		m_OSD.DisplayMessage(OSD_TOPLEFT, osdMessage);
@@ -14685,6 +14762,8 @@ bool CMainFrame::OpenMediaPrivate(std::unique_ptr<OpenMediaData>& pOMD)
 		if (m_fOpeningAborted) {
 			BREAK(aborted)
 		}
+
+		ApplyReplayGain();
 
 		m_bIsMadVRExclusiveMode = false;
 		// madVR - register Callback function for detect Entered to ExclusiveMode

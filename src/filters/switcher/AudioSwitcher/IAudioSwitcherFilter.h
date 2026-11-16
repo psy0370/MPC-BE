@@ -52,4 +52,5 @@ public IUnknown {
 	STDMETHOD(SetAudioFilter1)(const char* str_filter) PURE;
 	STDMETHOD_(int, GetAudioFilterState)() PURE;
 	STDMETHOD(SetAudioFiltersNotForStereo) (bool bDisableForStereo) PURE;
+	STDMETHOD(SetReplayGain) (double dGain_dB) PURE; // per-file gain, applied together with SetAudioGain
 };

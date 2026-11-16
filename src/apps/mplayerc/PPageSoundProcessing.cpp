@@ -121,6 +121,9 @@ void CPPageSoundProcessing::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLIDER3, m_sldNormLevel);
 	DDX_Control(pDX, IDC_SLIDER4, m_sldNormRealeaseTime);
 
+	DDX_Control(pDX, IDC_COMBO_REPLAYGAIN, m_cmbReplayGainMode);
+	DDX_Control(pDX, IDC_CHECK_REPLAYGAINCLIP, m_chkReplayGainPreventClip);
+
 	DDX_Control(pDX, IDC_CHECK1, m_chkAudioFilters);
 	DDX_Control(pDX, IDC_COMBO1, m_cmbFilter1Name);
 	DDX_Control(pDX, IDC_EDIT1, m_edtFilter1Args);
@@ -141,6 +144,8 @@ BEGIN_MESSAGE_MAP(CPPageSoundProcessing, CPPageBase)
 	ON_BN_CLICKED(IDC_CHECK7, OnMixerCheck)
 	ON_CBN_SELCHANGE(IDC_COMBO2, OnMixerLayoutChange)
 	ON_BN_CLICKED(IDC_CHECK5, OnAutoVolumeControlCheck)
+	ON_CBN_SELCHANGE(IDC_COMBO_REPLAYGAIN, OnReplayGainChange)
+	ON_BN_CLICKED(IDC_CHECK_REPLAYGAINCLIP, OnReplayGainChange)
 	ON_CBN_SELCHANGE(IDC_COMBO1, OnFilter1NameChange)
 	ON_BN_CLICKED(IDC_CHECK9, OnInt16Check)
 	ON_BN_CLICKED(IDC_CHECK10, OnInt24Check)
@@ -187,6 +192,13 @@ BOOL CPPageSoundProcessing::OnInitDialog()
 	m_sldNormLevel.SetPos(s.iAudioNormLevel);
 	m_sldNormRealeaseTime.SetRange(5, 10, TRUE);
 	m_sldNormRealeaseTime.SetPos(s.iAudioNormRealeaseTime);
+
+	AddStringData(m_cmbReplayGainMode, ResStr(IDS_REPLAYGAIN_OFF),   REPLAYGAIN_OFF);
+	AddStringData(m_cmbReplayGainMode, ResStr(IDS_REPLAYGAIN_TRACK), REPLAYGAIN_TRACK);
+	AddStringData(m_cmbReplayGainMode, ResStr(IDS_REPLAYGAIN_ALBUM), REPLAYGAIN_ALBUM);
+	AddStringData(m_cmbReplayGainMode, ResStr(IDS_REPLAYGAIN_AUTO),  REPLAYGAIN_AUTO);
+	SelectByItemData(m_cmbReplayGainMode, s.nAudioReplayGainMode);
+	m_chkReplayGainPreventClip.SetCheck(s.bAudioReplayGainPreventClip);
 
 	m_chkAudioFilters.SetCheck(s.bAudioFilters);
 	m_cmbFilter1Name.AddString(L"");
@@ -259,6 +271,9 @@ BOOL CPPageSoundProcessing::OnApply()
 	s.iAudioNormLevel			= m_sldNormLevel.GetPos();
 	s.iAudioNormRealeaseTime	= m_sldNormRealeaseTime.GetPos();
 
+	s.nAudioReplayGainMode			= GetCurItemData(m_cmbReplayGainMode);
+	s.bAudioReplayGainPreventClip	= !!m_chkReplayGainPreventClip.GetCheck();
+
 	s.bAudioFilters				= !!m_chkAudioFilters.GetCheck();
 	const int k = m_cmbFilter1Name.GetCurSel();
 	if (k== 0) {
@@ -304,6 +319,7 @@ BOOL CPPageSoundProcessing::OnApply()
 		}
 		pASF->SetAudioFiltersNotForStereo(s.bAudioFiltersNotForStereo);
 	}
+	AfxGetMainFrame()->ApplyReplayGain();
 
 	return __super::OnApply();
 }
@@ -331,6 +347,8 @@ void CPPageSoundProcessing::OnAutoVolumeControlCheck()
 	if (m_chkAutoVolumeControl.GetCheck()) {
 		m_stcGain.EnableWindow(FALSE);
 		m_sldGain.EnableWindow(FALSE);
+		m_cmbReplayGainMode.EnableWindow(FALSE);
+		m_chkReplayGainPreventClip.EnableWindow(FALSE);
 
 		m_chkNormBoostAudio.EnableWindow();
 		m_stcNormLevel.EnableWindow();
@@ -340,6 +358,8 @@ void CPPageSoundProcessing::OnAutoVolumeControlCheck()
 	} else {
 		m_stcGain.EnableWindow();
 		m_sldGain.EnableWindow();
+		m_cmbReplayGainMode.EnableWindow();
+		m_chkReplayGainPreventClip.EnableWindow(GetCurItemData(m_cmbReplayGainMode) != REPLAYGAIN_OFF);
 
 		m_chkNormBoostAudio.EnableWindow(FALSE);
 		m_stcNormLevel.EnableWindow(FALSE);
@@ -347,6 +367,14 @@ void CPPageSoundProcessing::OnAutoVolumeControlCheck()
 		m_sldNormLevel.EnableWindow(FALSE);
 		m_sldNormRealeaseTime.EnableWindow(FALSE);
 	}
+
+	SetModified();
+}
+
+void CPPageSoundProcessing::OnReplayGainChange()
+{
+	m_chkReplayGainPreventClip.EnableWindow(!m_chkAutoVolumeControl.GetCheck()
+		&& GetCurItemData(m_cmbReplayGainMode) != REPLAYGAIN_OFF);
 
 	SetModified();
 }
@@ -485,6 +513,9 @@ void CPPageSoundProcessing::OnBnClickedDefault()
 	m_chkNormBoostAudio.SetCheck(BST_CHECKED);
 	m_sldNormLevel.SetPos(75);
 	m_sldNormRealeaseTime.SetPos(8);
+
+	SelectByItemData(m_cmbReplayGainMode, REPLAYGAIN_AUTO);
+	m_chkReplayGainPreventClip.SetCheck(BST_CHECKED);
 
 	m_chkAudioFilters.SetCheck(BST_UNCHECKED);
 	m_cmbFilter1Name.SetCurSel(0);

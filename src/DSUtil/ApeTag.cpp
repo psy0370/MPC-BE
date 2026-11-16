@@ -23,6 +23,7 @@
 #include "DSUtil.h"
 #include "CUE.h"
 #include "DSMPropertyBag.h"
+#include "ReplayGain.h"
 #include "FileHandle.h"
 #include "std_helper.h"
 
@@ -138,6 +139,8 @@ void SetAPETagProperties(IBaseFilter* pBF, const CAPETag* pAPETag)
 		return;
 	}
 
+	CComQIPtr<IDSMPropertyBag> pRGPropertyBag = pBF;
+
 	CString Artist, Comment, Title, Year, Album;
 	for (const auto& [key, desc, value] : pAPETag->TagItems) {
 		CString tagKey(key); tagKey.MakeLower();
@@ -192,6 +195,8 @@ void SetAPETagProperties(IBaseFilter* pBF, const CAPETag* pAPETag)
 						Year = tagValue;
 					} else if (tagKey == L"album") {
 						Album = tagValue;
+					} else {
+						SetReplayGainProperty(pRGPropertyBag, key, tagValue);
 					}
 				}
 			}

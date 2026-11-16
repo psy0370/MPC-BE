@@ -113,6 +113,14 @@ constexpr auto CLSW_UNRECOGNIZEDSWITCH = (CLSW_DEVICE << 1);
 #define APP_AUDIOGAIN_MAX		 10.0
 #define APP_AUDIOGAIN_MIN		 -3.0
 
+enum {
+	REPLAYGAIN_OFF = 0,
+	REPLAYGAIN_TRACK,
+	REPLAYGAIN_ALBUM,
+	REPLAYGAIN_AUTO, // album gain, but track gain when the playlist is shuffled
+	REPLAYGAIN_COUNT
+};
+
 #define APP_THUMBWIDTH_MIN		256
 #define APP_THUMBWIDTH_MAX		5120
 
@@ -678,6 +686,8 @@ public:
 	double			dAudioSurround_dB;
 	double			dAudioGain_dB;
 	bool			bAudioAutoVolumeControl;
+	int				nAudioReplayGainMode;
+	bool			bAudioReplayGainPreventClip;
 	bool			bAudioNormBoost;
 	int				iAudioNormLevel;
 	int				iAudioNormRealeaseTime;

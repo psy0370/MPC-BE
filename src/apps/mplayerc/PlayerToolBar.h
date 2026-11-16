@@ -46,6 +46,17 @@ private:
 	bool		m_bGPUIconShow = false;
 	CRect		m_GPUIconRect;
 
+	// ReplayGain indicator ("RG"), drawn to the right of the SUB button
+	HICON		m_hRGIcon = nullptr;         // ReplayGain applied
+	HICON		m_hRGIconDisabled = nullptr; // not applied
+	LONG		m_nRGIconWidth = 0;
+	LONG		m_nRGIconHeight = 0;
+	bool		m_bRGIconShow = false;
+	CRect		m_RGIconRect;
+	int			m_nReplayGainState = 0;
+	double		m_dReplayGain_dB = 0.0;    // applied gain
+	double		m_dReplayGainTag_dB = 0.0; // gain from the tag (before clipping prevention)
+
 	CImageList	m_imgListActive;
 	CImageList	m_imgListDisabled;
 
@@ -65,6 +76,13 @@ public:
 
 	BOOL		m_bAudioEnable = FALSE;
 	BOOL		m_bSubtitleEnable = FALSE;
+
+	enum {
+		RG_STATE_NONE = 0, // not applied
+		RG_STATE_TRACK,
+		RG_STATE_ALBUM,
+	};
+	void SetReplayGainState(int state, double gain_dB, double tagGain_dB);
 
 	CPlayerToolBar(CMainFrame* pMainFrame);
 	virtual ~CPlayerToolBar();
@@ -86,6 +104,8 @@ private:
 	bool IsMuted();
 	void SetMute(bool fMute = true);
 	int getHitButtonIdx(CPoint point);
+	void LoadReplayGainIcons();
+	void DestroyReplayGainIcons();
 
 protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);

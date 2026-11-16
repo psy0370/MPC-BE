@@ -50,6 +50,9 @@ class CPPageSoundProcessing : public CPPageBase
 	CSliderCtrl	m_sldNormLevel;
 	CSliderCtrl	m_sldNormRealeaseTime;
 
+	CComboBox	m_cmbReplayGainMode;
+	CButton		m_chkReplayGainPreventClip;
+
 	CButton		m_chkAudioFilters;
 	CComboBox	m_cmbFilter1Name;
 	CEdit		m_edtFilter1Args;
@@ -88,6 +91,7 @@ public:
 	afx_msg void OnMixerCheck();
 	afx_msg void OnMixerLayoutChange();
 	afx_msg void OnAutoVolumeControlCheck();
+	afx_msg void OnReplayGainChange();
 	afx_msg void OnFilter1NameChange();
 	afx_msg void OnInt16Check();
 	afx_msg void OnInt24Check();
