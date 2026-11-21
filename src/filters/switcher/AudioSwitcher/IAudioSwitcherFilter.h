@@ -38,6 +38,11 @@ enum {
 	SPK_7_1
 };
 
+// graphic equalizer: 63 Hz, 250 Hz, 1 kHz, 4 kHz, 16 kHz
+#define AUDIO_EQ_BANDS     5
+#define AUDIO_EQ_GAIN_MAX  12.0
+#define AUDIO_EQ_GAIN_MIN -12.0
+
 interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE"))
 IAudioSwitcherFilter :
 public IUnknown {
@@ -53,4 +58,5 @@ public IUnknown {
 	STDMETHOD_(int, GetAudioFilterState)() PURE;
 	STDMETHOD(SetAudioFiltersNotForStereo) (bool bDisableForStereo) PURE;
 	STDMETHOD(SetReplayGain) (double dGain_dB) PURE; // per-file gain, applied together with SetAudioGain
+	STDMETHOD(SetEqualizer) (bool bEnable, bool bPreventClip, const double* pGains_dB, int nBands) PURE; // nBands gains (AUDIO_EQ_BANDS max), applied in real time; bPreventClip lowers the level by the peak boost
 };

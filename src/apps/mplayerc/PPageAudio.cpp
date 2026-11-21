@@ -21,10 +21,24 @@
 
 #include "stdafx.h"
 #include "filters/renderer/MpcAudioRenderer/MpcAudioRenderer.h"
+#include "filters/switcher/AudioSwitcher/IAudioSwitcherFilter.h"
 #include "ComPropertySheet.h"
 #include "PPageAudio.h"
 #include "MainFrm.h"
 #include "clsids.h"
+
+static_assert(APP_AUDIOEQ_BANDS == AUDIO_EQ_BANDS);
+
+static const struct {
+	UINT nameId;
+	int gains[APP_AUDIOEQ_BANDS]; // dB: 63 Hz, 250 Hz, 1 kHz, 4 kHz, 16 kHz
+} s_EqPresets[] = {
+	{ IDS_EQ_PRESET_FLAT,    {  0,  0,  0,  0,  0 } },
+	{ IDS_EQ_PRESET_ROCK,    { +5, +2, -2, +2, +6 } },
+	{ IDS_EQ_PRESET_CLASSIC, {  0, +2, +4, +1, +2 } },
+	{ IDS_EQ_PRESET_POPS,    { -1, +1, +4, +2, +1 } },
+};
+#define EQ_PRESET_CUSTOM ((int)std::size(s_EqPresets)) // combo item data of "Custom"
 
 // CPPageAudio dialog
 
@@ -55,6 +69,14 @@ void CPPageAudio::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK2, m_fAutoloadAudio);
 	DDX_Text(pDX, IDC_EDIT4, m_sAudioPaths);
 	DDX_Check(pDX, IDC_CHECK3, m_fPrioritizeExternalAudio);
+
+	DDX_Control(pDX, IDC_CHECK_EQ, m_chkEq);
+	DDX_Control(pDX, IDC_CHECK_EQ_PREVENTCLIP, m_chkEqPreventClip);
+	DDX_Control(pDX, IDC_COMBO_EQPRESET, m_cmbEqPreset);
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		DDX_Control(pDX, IDC_SLIDER_EQ1 + i, m_sldEq[i]);
+		DDX_Control(pDX, IDC_STATIC_EQ1 + i, m_stcEq[i]);
+	}
 }
 
 BOOL CPPageAudio::PreTranslateMessage(MSG* pMsg)
@@ -73,6 +95,10 @@ BOOL CPPageAudio::PreTranslateMessage(MSG* pMsg)
 
 BEGIN_MESSAGE_MAP(CPPageAudio, CPPageBase)
 	ON_WM_HSCROLL()
+	ON_WM_VSCROLL()
+	ON_BN_CLICKED(IDC_CHECK_EQ, OnEqCheck)
+	ON_BN_CLICKED(IDC_CHECK_EQ_PREVENTCLIP, OnEqPreventClipCheck)
+	ON_CBN_SELCHANGE(IDC_COMBO_EQPRESET, OnEqPresetChange)
 	ON_CBN_SELCHANGE(IDC_AUDRND_COMBO, OnAudioRendererChange)
 	ON_BN_CLICKED(IDC_BUTTON1, OnAudioRenderPropClick)
 	ON_BN_CLICKED(IDC_CHECK1, OnDualAudioOutputCheck)
@@ -209,6 +235,26 @@ BOOL CPPageAudio::OnInitDialog()
 	m_fPrioritizeExternalAudio = s.fPrioritizeExternalAudio;
 	m_sAudioPaths              = s.strAudioPaths;
 
+	// equalizer
+	for (int i = 0; i < (int)std::size(s_EqPresets); i++) {
+		AddStringData(m_cmbEqPreset, ResStr(s_EqPresets[i].nameId), i);
+	}
+	AddStringData(m_cmbEqPreset, ResStr(IDS_EQ_PRESET_CUSTOM), EQ_PRESET_CUSTOM);
+
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		// a vertical trackbar has its minimum at the top, so the position is the inverted gain
+		m_sldEq[i].SetRange(-APP_AUDIOEQ_GAIN_MAX, -APP_AUDIOEQ_GAIN_MIN);
+		m_sldEq[i].SetTicFreq(6);
+		m_sldEq[i].SetLineSize(1);
+		m_sldEq[i].SetPageSize(3);
+		SetEqGain(i, s.iAudioEqGains[i]);
+	}
+	m_chkEq.SetCheck(s.bAudioEqEnabled ? BST_CHECKED : BST_UNCHECKED);
+	m_chkEqPreventClip.SetCheck(s.bAudioEqPreventClip ? BST_CHECKED : BST_UNCHECKED);
+	UpdateEqLabels();
+	UpdateEqPresetSel();
+	UpdateEqControlsState();
+
 	UpdateData(FALSE);
 
 	OnAudioRendererChange();
@@ -238,6 +284,13 @@ BOOL CPPageAudio::OnApply()
 	s.fPrioritizeExternalAudio = !!m_fPrioritizeExternalAudio;
 	s.strAudioPaths = m_sAudioPaths;
 
+	s.bAudioEqEnabled = !!m_chkEq.GetCheck();
+	s.bAudioEqPreventClip = !!m_chkEqPreventClip.GetCheck();
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		s.iAudioEqGains[i] = GetEqGain(i);
+	}
+	ApplyEqualizer(s.bAudioEqEnabled, s.bAudioEqPreventClip, s.iAudioEqGains);
+
 	return __super::OnApply();
 }
 
@@ -255,6 +308,119 @@ void CPPageAudio::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	SetModified();
 
 	__super::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CPPageAudio::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	if (pScrollBar) {
+		for (const auto& sld : m_sldEq) {
+			if (pScrollBar->m_hWnd == sld.m_hWnd) {
+				UpdateEqLabels();
+				UpdateEqPresetSel();
+				ApplyEqualizerFromControls(); // real time
+				SetModified();
+				break;
+			}
+		}
+	}
+
+	__super::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+int CPPageAudio::GetEqGain(int band)
+{
+	return -m_sldEq[band].GetPos();
+}
+
+void CPPageAudio::SetEqGain(int band, int gain_dB)
+{
+	m_sldEq[band].SetPos(-std::clamp(gain_dB, APP_AUDIOEQ_GAIN_MIN, APP_AUDIOEQ_GAIN_MAX));
+}
+
+void CPPageAudio::UpdateEqLabels()
+{
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		const int gain = GetEqGain(i);
+		CString str;
+		str.Format(gain ? L"%+d dB" : L"%d dB", gain);
+		m_stcEq[i].SetWindowTextW(str);
+	}
+}
+
+void CPPageAudio::UpdateEqPresetSel()
+{
+	int preset = EQ_PRESET_CUSTOM;
+	for (int p = 0; p < (int)std::size(s_EqPresets); p++) {
+		bool match = true;
+		for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+			if (GetEqGain(i) != s_EqPresets[p].gains[i]) {
+				match = false;
+				break;
+			}
+		}
+		if (match) {
+			preset = p;
+			break;
+		}
+	}
+	SelectByItemData(m_cmbEqPreset, preset);
+}
+
+void CPPageAudio::UpdateEqControlsState()
+{
+	const BOOL bEnable = !!m_chkEq.GetCheck();
+	m_cmbEqPreset.EnableWindow(bEnable);
+	m_chkEqPreventClip.EnableWindow(bEnable);
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		m_sldEq[i].EnableWindow(bEnable);
+		m_stcEq[i].EnableWindow(bEnable);
+	}
+}
+
+void CPPageAudio::ApplyEqualizer(bool bEnable, bool bPreventClip, const int* pGains_dB)
+{
+	if (CComQIPtr<IAudioSwitcherFilter> pASF = AfxGetMainFrame()->m_pSwitcherFilter.p) {
+		double gains[AUDIO_EQ_BANDS];
+		std::copy(pGains_dB, pGains_dB + AUDIO_EQ_BANDS, gains);
+		pASF->SetEqualizer(bEnable, bPreventClip, gains, AUDIO_EQ_BANDS);
+	}
+}
+
+void CPPageAudio::ApplyEqualizerFromControls()
+{
+	int gains[APP_AUDIOEQ_BANDS];
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		gains[i] = GetEqGain(i);
+	}
+	ApplyEqualizer(!!m_chkEq.GetCheck(), !!m_chkEqPreventClip.GetCheck(), gains);
+}
+
+void CPPageAudio::OnEqCheck()
+{
+	UpdateEqControlsState();
+	ApplyEqualizerFromControls();
+	SetModified();
+}
+
+void CPPageAudio::OnEqPreventClipCheck()
+{
+	ApplyEqualizerFromControls();
+	SetModified();
+}
+
+void CPPageAudio::OnEqPresetChange()
+{
+	const int preset = (int)GetCurItemData(m_cmbEqPreset);
+	if (preset < 0 || preset >= EQ_PRESET_CUSTOM) {
+		return; // "Custom" keeps the current slider positions
+	}
+
+	for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+		SetEqGain(i, s_EqPresets[preset].gains[i]);
+	}
+	UpdateEqLabels();
+	ApplyEqualizerFromControls();
+	SetModified();
 }
 
 void CPPageAudio::ShowPPage(CUnknown* (WINAPI * CreateInstance)(LPUNKNOWN lpunk, HRESULT* phr))
@@ -410,6 +576,9 @@ void CPPageAudio::OnCancel()
 	if (m_nBalance != s.nBalance) {
 		AfxGetMainFrame()->SetBalance(s.nBalance);
 	}
+
+	// revert the equalizer changes that were applied in real time
+	ApplyEqualizer(s.bAudioEqEnabled, s.bAudioEqPreventClip, s.iAudioEqGains);
 
 	__super::OnCancel();
 }

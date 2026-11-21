@@ -123,6 +123,46 @@ inline double decibel2factor(double dB) {
 	return pow(10.0, dB / 20.0);
 }
 
+// graphic equalizer (two-pole peaking filters, 2 octaves apart, ISO center frequencies)
+static const double s_EqFrequencies[AUDIO_EQ_BANDS] = { 63, 250, 1000, 4000, 16000 };
+#define EQ_BAND_WIDTH_OCT "2"
+#define EQ_BAND_WIDTH_OCT_VALUE 2.0
+
+static CStringA EqBandName(const int band)
+{
+	CStringA name;
+	name.Format("equalizer@eq%d", band);
+	return name;
+}
+
+// magnitude response in dB of one two-pole peaking filter (same coefficients as ffmpeg "equalizer", t=o)
+static double EqBandResponse_dB(const double f0, const double width_oct, const double gain_dB, const double samplerate, const double f)
+{
+	const double A     = pow(10.0, gain_dB / 40.0);
+	const double w0    = 2.0 * M_PI * f0 / samplerate;
+	const double alpha = sin(w0) * sinh(log(2.0) / 2.0 * width_oct * w0 / sin(w0));
+	const double c     = -2.0 * cos(w0);
+	const double b0 = 1.0 + alpha * A, b1 = c, b2 = 1.0 - alpha * A;
+	const double a0 = 1.0 + alpha / A, a1 = c, a2 = 1.0 - alpha / A;
+
+	// |H(e^jw)|^2
+	const double w = 2.0 * M_PI * f / samplerate;
+	const double cw = cos(w), c2w = cos(2.0 * w);
+	const double num = b0*b0 + b1*b1 + b2*b2 + 2.0*(b0*b1 + b1*b2)*cw + 2.0*b0*b2*c2w;
+	const double den = a0*a0 + a1*a1 + a2*a2 + 2.0*(a0*a1 + a1*a2)*cw + 2.0*a0*a2*c2w;
+
+	return 10.0 * log10(num / den);
+}
+
+static CStringA EqGainStr(const double gain_dB)
+{
+	// locale independent "%.1f"
+	const long t = lround(gain_dB * 10.0);
+	CStringA str;
+	str.Format("%s%ld.%ld", t < 0 ? "-" : "", labs(t) / 10, labs(t) % 10);
+	return str;
+}
+
 //
 // CAudioSwitcherFilter
 //
@@ -275,11 +315,13 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 		return E_FAIL;
 	}
 
-	bool bAFilters;
-	if (audio_channels <= 2 && m_bAudioFiltersDisableForStereo) {
-		bAFilters = false;
-	} else {
-		bAFilters = (m_afilters.size() > 0);
+	// the "not for stereo" option applies to the user filter (compand) only, not to the equalizer
+	const bool bUserFilters = m_afilters.size() > 0 && !(audio_channels <= 2 && m_bAudioFiltersDisableForStereo);
+	const bool bEqFilter    = m_bEqEnabled;
+	const bool bAFilters    = bUserFilters || bEqFilter;
+
+	if (m_AudioFilter.IsInitialized() && (bUserFilters != m_bAFilterGraphUser || bEqFilter != m_bAFilterGraphEq)) {
+		m_AudioFilter.Flush(); // the set of filters has changed, rebuild the graph
 	}
 
 	const WAVEFORMATEX* output_wfe = (WAVEFORMATEX*)pOutPin->CurrentMediaType().pbFormat;
@@ -373,11 +415,21 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	if (bAFilters) {
 		hr = S_FALSE;
 		if (!m_AudioFilter.IsInitialized()) {
+			std::list<std::pair<CStringA, CStringA>> filters;
+			if (bEqFilter) {
+				AddEqualizerFilters(filters, audio_samplerate);
+			}
+			if (bUserFilters) {
+				filters.insert(filters.end(), m_afilters.begin(), m_afilters.end());
+			}
+
 			hr = m_AudioFilter.Initialize(
 				SAMPLE_FMT_FLT, audio_layout, audio_samplerate,
 				SAMPLE_FMT_FLT, audio_layout, audio_samplerate,
-				true, m_afilters
+				true, filters
 			);
+			m_bAFilterGraphUser = bUserFilters;
+			m_bAFilterGraphEq   = bEqFilter;
 		}
 		if (SUCCEEDED(hr)) {
 			if (audio_sampleformat != SAMPLE_FMT_FLT) {
@@ -397,6 +449,11 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 				}
 				audio_data = (BYTE*)m_buffer.Data();
 				audio_samples = audio_allsamples / audio_channels;
+
+				// equalizer anti-clipping preamp (works in place on our float buffer)
+				if (m_bAFilterGraphEq && m_dEqPreampFactor != 1.0) {
+					gain_float(m_dEqPreampFactor, audio_allsamples, m_buffer.Data());
+				}
 			}
 		}
 	}
@@ -454,7 +511,7 @@ void CAudioSwitcherFilter::TransformMediaType(CMediaType& mt, const bool bForce1
 		const auto input_channels = wfe->nChannels;
 		const auto input_layout = (wfe->wFormatTag == WAVE_FORMAT_EXTENSIBLE && wfe->nChannels == CountBits(wfex->dwChannelMask)) ? wfex->dwChannelMask : GetDefChannelMask(wfe->nChannels);
 
-		if (m_bAutoVolumeControl || (m_afilters.size() && (input_channels > 2 || !m_bAudioFiltersDisableForStereo))) {
+		if (m_bAutoVolumeControl || m_bEqEnabled || (m_afilters.size() && (input_channels > 2 || !m_bAudioFiltersDisableForStereo))) {
 			sampleformat = SAMPLE_FMT_FLT; // this transformations change the sample format to float
 		}
 
@@ -778,7 +835,7 @@ STDMETHODIMP CAudioSwitcherFilter::SetAudioFilter1(const char* str_filter)
 
 STDMETHODIMP_(int) CAudioSwitcherFilter::GetAudioFilterState()
 {
-	if (m_AudioFilter.IsInitialized()) {
+	if (m_AudioFilter.IsInitialized() && m_bAFilterGraphUser) {
 		return m_afilters.size();
 	} else {
 		return m_afilters.size() ? -2 : -1;
@@ -789,6 +846,96 @@ STDMETHODIMP CAudioSwitcherFilter::SetAudioFiltersNotForStereo(bool bDisableForS
 {
 	m_bAudioFiltersDisableForStereo = bDisableForStereo;
 	return S_OK;
+}
+
+STDMETHODIMP CAudioSwitcherFilter::SetEqualizer(bool bEnable, bool bPreventClip, const double* pGains_dB, int nBands)
+{
+	CAutoLock cAutoLock(&m_csTransform);
+
+	if (bEnable != m_bEqEnabled) {
+		m_bEqEnabled = bEnable;
+		m_bOutputFormatChanged = true; // the equalizer prefers float output, see TransformMediaType
+	}
+	m_bEqPreventClip = bPreventClip;
+
+	if (pGains_dB) {
+		nBands = std::clamp(nBands, 0, AUDIO_EQ_BANDS);
+		for (int i = 0; i < nBands; i++) {
+			const double gain = std::clamp(pGains_dB[i], AUDIO_EQ_GAIN_MIN, AUDIO_EQ_GAIN_MAX);
+			if (gain == m_EqGains[i]) {
+				continue;
+			}
+			m_EqGains[i] = gain;
+
+			// change the gain in the running graph, the filter state is kept so there is no click
+			if (m_AudioFilter.IsInitialized() && m_bAFilterGraphEq) {
+				// may fail for a band above the Nyquist frequency that was not added, that's ok
+				m_AudioFilter.SendCommand(EqBandName(i), "g", EqGainStr(gain));
+			}
+		}
+	}
+
+	UpdateEqPreamp();
+
+	return S_OK;
+}
+
+void CAudioSwitcherFilter::UpdateEqPreamp()
+{
+	m_dEqPreampFactor = 1.0;
+	if (!m_bEqPreventClip || !m_nEqSamplerate) {
+		return;
+	}
+
+	// find the maximum boost of the combined response in the audible range
+	const double fs   = m_nEqSamplerate;
+	const double fmin = 20.0;
+	const double fmax = std::min(20000.0, fs / 2.0 * 0.99);
+	double peak_dB = 0.0;
+
+	auto response = [&](const double f) {
+		double r = 0.0;
+		for (int i = 0; i < AUDIO_EQ_BANDS; i++) {
+			if (m_EqGains[i] != 0.0 && s_EqFrequencies[i] < fs / 2.0) { // same bands as AddEqualizerFilters
+				r += EqBandResponse_dB(s_EqFrequencies[i], EQ_BAND_WIDTH_OCT_VALUE, m_EqGains[i], fs, f);
+			}
+		}
+		return r;
+	};
+
+	constexpr int steps = 480; // ~1/48 octave
+	for (int n = 0; n <= steps; n++) {
+		const double f = fmin * pow(fmax / fmin, (double)n / steps);
+		peak_dB = std::max(peak_dB, response(f));
+	}
+	for (const auto& f : s_EqFrequencies) {
+		if (f <= fmax) {
+			peak_dB = std::max(peak_dB, response(f));
+		}
+	}
+
+	if (peak_dB > 0.0) {
+		m_dEqPreampFactor = decibel2factor(-peak_dB);
+	}
+	DLog(L"CAudioSwitcherFilter::UpdateEqPreamp() : peak %+.2f dB, preamp %.4f", peak_dB, m_dEqPreampFactor);
+}
+
+void CAudioSwitcherFilter::AddEqualizerFilters(std::list<std::pair<CStringA, CStringA>>& filters, const unsigned samplerate)
+{
+	if (samplerate != m_nEqSamplerate) {
+		m_nEqSamplerate = samplerate;
+		UpdateEqPreamp();
+	}
+
+	for (int i = 0; i < AUDIO_EQ_BANDS; i++) {
+		if (s_EqFrequencies[i] >= samplerate / 2.0) {
+			continue; // the band is outside the signal
+		}
+
+		CStringA args;
+		args.Format("f=%d:t=o:w=" EQ_BAND_WIDTH_OCT ":g=%s", (int)s_EqFrequencies[i], EqGainStr(m_EqGains[i]).GetString());
+		filters.emplace_back(EqBandName(i), args);
+	}
 }
 
 // IAMStreamSelect

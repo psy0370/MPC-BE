@@ -133,6 +133,29 @@ BEGIN
     PUSHBUTTON      "Reset",IDC_BUTTON2,235,124,50,13
     CONTROL         "Prefer external audio files over embedded audio track",IDC_CHECK3,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,140,273,9
+    GROUPBOX        "Equalizer",IDC_STATIC,5,156,285,103
+    CONTROL         "Enable equalizer",IDC_CHECK_EQ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,168,130,9
+    RTEXT           "Preset:",IDC_STATIC,160,168,67,8
+    COMBOBOX        IDC_COMBO_EQPRESET,230,166,55,60,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Prevent clipping (lower the level by the peak boost)",IDC_CHECK_EQ_PREVENTCLIP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,180,265,9
+    RTEXT           "+12 dB",IDC_STATIC,12,201,30,8
+    RTEXT           "0 dB",IDC_STATIC,12,218,30,8
+    RTEXT           "-12 dB",IDC_STATIC,12,235,30,8
+    CTEXT           "0 dB",IDC_STATIC_EQ1,50,192,40,8
+    CONTROL         "",IDC_SLIDER_EQ1,"msctls_trackbar32",TBS_VERT | TBS_BOTH | TBS_AUTOTICKS | WS_TABSTOP,60,201,20,44
+    CTEXT           "63 Hz",IDC_STATIC,50,246,40,8
+    CTEXT           "0 dB",IDC_STATIC_EQ2,98,192,40,8
+    CONTROL         "",IDC_SLIDER_EQ2,"msctls_trackbar32",TBS_VERT | TBS_BOTH | TBS_AUTOTICKS | WS_TABSTOP,108,201,20,44
+    CTEXT           "250 Hz",IDC_STATIC,98,246,40,8
+    CTEXT           "0 dB",IDC_STATIC_EQ3,146,192,40,8
+    CONTROL         "",IDC_SLIDER_EQ3,"msctls_trackbar32",TBS_VERT | TBS_BOTH | TBS_AUTOTICKS | WS_TABSTOP,156,201,20,44
+    CTEXT           "1 kHz",IDC_STATIC,146,246,40,8
+    CTEXT           "0 dB",IDC_STATIC_EQ4,194,192,40,8
+    CONTROL         "",IDC_SLIDER_EQ4,"msctls_trackbar32",TBS_VERT | TBS_BOTH | TBS_AUTOTICKS | WS_TABSTOP,204,201,20,44
+    CTEXT           "4 kHz",IDC_STATIC,194,246,40,8
+    CTEXT           "0 dB",IDC_STATIC_EQ5,242,192,40,8
+    CONTROL         "",IDC_SLIDER_EQ5,"msctls_trackbar32",TBS_VERT | TBS_BOTH | TBS_AUTOTICKS | WS_TABSTOP,252,201,20,44
+    CTEXT           "16 kHz",IDC_STATIC,242,246,40,8
 END
 
 IDD_PPAGESOUNDPROCESSING DIALOGEX 0, 0, 296, 264
@@ -3178,6 +3201,11 @@ BEGIN
     IDS_REPLAYGAIN_AUTO     "Auto (playback order)"
     IDS_REPLAYGAIN_NOT_APPLIED "Not applied"
     IDS_REPLAYGAIN_CLIPPED  ", clipping prevention"
+    IDS_EQ_PRESET_FLAT      "Flat"
+    IDS_EQ_PRESET_ROCK      "Rock"
+    IDS_EQ_PRESET_CLASSIC   "Classical"
+    IDS_EQ_PRESET_POPS      "Pop"
+    IDS_EQ_PRESET_CUSTOM    "Custom"
 END
 
 STRINGTABLE

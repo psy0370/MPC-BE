@@ -78,6 +78,9 @@ public:
 	HRESULT Pull(std::unique_ptr<CPacket>& p);
 	HRESULT Pull(REFERENCE_TIME& time_start, CSimpleBuffer<float>& simpleBuffer, unsigned& allsamples);
 
+	// changes a runtime parameter of the filter(s) named "target" (instance name or filter type) without rebuilding the graph
+	HRESULT SendCommand(const char* target, const char* cmd, const char* arg);
+
 	BOOL IsInitialized() const { return m_pFilterGraph != nullptr; }
 
 	void Flush();

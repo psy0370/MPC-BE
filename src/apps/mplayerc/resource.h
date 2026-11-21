@@ -1830,18 +1830,36 @@
 #define IDS_REPLAYGAIN_AUTO             44116
 #define IDS_REPLAYGAIN_NOT_APPLIED      44117
 #define IDS_REPLAYGAIN_CLIPPED          44118
+#define IDS_EQ_PRESET_FLAT              44119
+#define IDS_EQ_PRESET_ROCK              44120
+#define IDS_EQ_PRESET_CLASSIC           44121
+#define IDS_EQ_PRESET_POPS              44122
+#define IDS_EQ_PRESET_CUSTOM            44123
 
 #define IDC_COMBO_LOOPMODE              22054
 #define IDC_COMBO_REPLAYGAIN            22055
 #define IDC_CHECK_REPLAYGAINCLIP        22056
+#define IDC_CHECK_EQ                    22057
+#define IDC_COMBO_EQPRESET              22058
+#define IDC_SLIDER_EQ1                  22059
+#define IDC_SLIDER_EQ2                  22060
+#define IDC_SLIDER_EQ3                  22061
+#define IDC_SLIDER_EQ4                  22062
+#define IDC_SLIDER_EQ5                  22063
+#define IDC_STATIC_EQ1                  22064
+#define IDC_STATIC_EQ2                  22065
+#define IDC_STATIC_EQ3                  22066
+#define IDC_STATIC_EQ4                  22067
+#define IDC_STATIC_EQ5                  22068
+#define IDC_CHECK_EQ_PREVENTCLIP        22069
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        44119
+#define _APS_NEXT_RESOURCE_VALUE        44124
 #define _APS_NEXT_COMMAND_VALUE         1205
-#define _APS_NEXT_CONTROL_VALUE         22057
+#define _APS_NEXT_CONTROL_VALUE         22070
 #define _APS_NEXT_SYMED_VALUE           24044
 #endif
 #endif

@@ -22,6 +22,7 @@
 #pragma once
 
 #include "PPageBase.h"
+#include "AppSettings.h"
 
 // CPPageAudio dialog
 
@@ -63,7 +64,22 @@ public:
 	CString		m_sAudioPaths;
 	BOOL		m_fPrioritizeExternalAudio = FALSE;
 
+	CButton		m_chkEq;
+	CButton		m_chkEqPreventClip;
+	CComboBox	m_cmbEqPreset;
+	CSliderCtrl	m_sldEq[APP_AUDIOEQ_BANDS];
+	CStatic		m_stcEq[APP_AUDIOEQ_BANDS];
+
 	void ShowPPage(CUnknown* (WINAPI * CreateInstance)(LPUNKNOWN lpunk, HRESULT* phr));
+
+private:
+	int  GetEqGain(int band);
+	void SetEqGain(int band, int gain_dB);
+	void UpdateEqLabels();
+	void UpdateEqPresetSel();
+	void UpdateEqControlsState();
+	void ApplyEqualizer(bool bEnable, bool bPreventClip, const int* pGains_dB);
+	void ApplyEqualizerFromControls();
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
@@ -75,6 +91,10 @@ protected:
 
 public:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnEqCheck();
+	afx_msg void OnEqPreventClipCheck();
+	afx_msg void OnEqPresetChange();
 	afx_msg void OnAudioRendererChange();
 	afx_msg void OnAudioRenderPropClick();
 	afx_msg void OnDualAudioOutputCheck();

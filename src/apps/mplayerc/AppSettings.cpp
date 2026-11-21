@@ -642,6 +642,9 @@ void CAppSettings::ResetSettings()
 	bAudioFilters = false;
 	strAudioFilter1.Empty();
 	bAudioFiltersNotForStereo = false;
+	bAudioEqEnabled = false;
+	bAudioEqPreventClip = true;
+	std::fill(std::begin(iAudioEqGains), std::end(iAudioEqGains), 0);
 
 	m_VRSettings.SetDefault();
 
@@ -1078,6 +1081,19 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 		strAudioFilter1.Empty();
 	}
 	profile.ReadBool(IDS_R_AUDIO, IDS_RS_AUDIOFILTERS_NOTFORSTEREO, bAudioFiltersNotForStereo);
+	profile.ReadBool(IDS_R_AUDIO, IDS_RS_AUDIOEQENABLED, bAudioEqEnabled);
+	profile.ReadBool(IDS_R_AUDIO, IDS_RS_AUDIOEQPREVENTCLIP, bAudioEqPreventClip);
+	if (profile.ReadString(IDS_R_AUDIO, IDS_RS_AUDIOEQGAINS, str)) {
+		// "g1,g2,g3,g4,g5"
+		int pos = 0;
+		for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+			CStringW token = str.Tokenize(L",", pos);
+			if (token.IsEmpty()) {
+				break;
+			}
+			iAudioEqGains[i] = std::clamp(_wtoi(token), APP_AUDIOEQ_GAIN_MIN, APP_AUDIOEQ_GAIN_MAX);
+		}
+	}
 
 	{
 		m_ExternalFilters.clear();
@@ -1758,6 +1774,15 @@ void CAppSettings::SaveSettings()
 	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIOFILTERS, bAudioFilters);
 	profile.WriteString(IDS_R_AUDIO, IDS_RS_AUDIOFILTER1, CStringW(strAudioFilter1));
 	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIOFILTERS_NOTFORSTEREO, bAudioFiltersNotForStereo);
+	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIOEQENABLED, bAudioEqEnabled);
+	profile.WriteBool(IDS_R_AUDIO, IDS_RS_AUDIOEQPREVENTCLIP, bAudioEqPreventClip);
+	{
+		CStringW gains;
+		for (int i = 0; i < APP_AUDIOEQ_BANDS; i++) {
+			gains.AppendFormat(i ? L",%d" : L"%d", iAudioEqGains[i]);
+		}
+		profile.WriteString(IDS_R_AUDIO, IDS_RS_AUDIOEQGAINS, gains);
+	}
 
 	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_BUFFERDURATION, iBufferDuration);
 

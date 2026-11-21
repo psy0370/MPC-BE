@@ -113,6 +113,10 @@ constexpr auto CLSW_UNRECOGNIZEDSWITCH = (CLSW_DEVICE << 1);
 #define APP_AUDIOGAIN_MAX		 10.0
 #define APP_AUDIOGAIN_MIN		 -3.0
 
+#define APP_AUDIOEQ_BANDS		5 // must match AUDIO_EQ_BANDS in IAudioSwitcherFilter.h
+#define APP_AUDIOEQ_GAIN_MAX	12
+#define APP_AUDIOEQ_GAIN_MIN	-12
+
 enum {
 	REPLAYGAIN_OFF = 0,
 	REPLAYGAIN_TRACK,
@@ -697,6 +701,9 @@ public:
 	bool			bAudioFilters;
 	CStringA		strAudioFilter1;
 	bool			bAudioFiltersNotForStereo;
+	bool			bAudioEqEnabled;
+	bool			bAudioEqPreventClip;
+	int				iAudioEqGains[APP_AUDIOEQ_BANDS]; // dB
 
 	// External Filters
 	std::list<std::unique_ptr<FilterOverride>> m_ExternalFilters;

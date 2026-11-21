@@ -225,8 +225,23 @@ HRESULT CAudioFilter::Initialize(
 		AVFilterContext* endFilterCtx = m_pFilterBufferSrc;
 
 		for (const auto&[flt_name, flt_args] : filters) {
-			const AVFilter* filter = avfilter_get_by_name(flt_name);
+			// "name@instance" allows several filters of the same type to be addressed separately
+			CStringA flt_type = flt_name;
+			const int k = flt_type.Find('@');
+			if (k > 0) {
+				flt_type.Truncate(k);
+			}
+
+			const AVFilter* filter = avfilter_get_by_name(flt_type);
+			if (!filter) {
+				ret = AVERROR_FILTER_NOT_FOUND;
+				break;
+			}
 			AVFilterContext* filter_ctx = avfilter_graph_alloc_filter(m_pFilterGraph, filter, flt_name);
+			if (!filter_ctx) {
+				ret = AVERROR(ENOMEM);
+				break;
+			}
 			ret = avfilter_init_str(filter_ctx, flt_args);
 			if (ret < 0) {
 				break;
@@ -371,6 +386,21 @@ HRESULT CAudioFilter::Pull(REFERENCE_TIME& time_start, CSimpleBuffer<float>& sim
 		ret >= 0 ? S_OK :
 		ret == AVERROR(EAGAIN) ? E_PENDING :
 		E_FAIL;
+}
+
+HRESULT CAudioFilter::SendCommand(const char* target, const char* cmd, const char* arg)
+{
+	CAutoLock cAutoLock(&m_csFilter);
+
+	if (!m_pFilterGraph) {
+		return E_ABORT;
+	}
+
+	const int ret = avfilter_graph_send_command(m_pFilterGraph, target, cmd, arg, nullptr, 0, 0);
+
+	DLogIf(ret < 0, L"CAudioFilter::SendCommand failed with %s", AvError2Str(ret));
+
+	return ret < 0 ? E_FAIL : S_OK;
 }
 
 void CAudioFilter::Flush()

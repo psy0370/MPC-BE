@@ -138,6 +138,7 @@ class CMainFrame : public CFrameWnd, public CDropTarget, public CDPI
 	friend class CGraphThread;
 	friend class CPPageSubtitles;
 	friend class CPPageSoundProcessing;
+	friend class CPPageAudio;
 	friend class CPPageInterface;
 	friend class CMPlayerCApp;
 	friend class CPlayerPlaylistBar;

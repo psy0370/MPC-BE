@@ -2871,6 +2871,10 @@ STDMETHODIMP CFGManagerCustom::AddFilter(IBaseFilter* pBF, LPCWSTR pName)
 			pASF->SetAudioFilter1(s.strAudioFilter1);
 		}
 		pASF->SetAudioFiltersNotForStereo(s.bAudioFiltersNotForStereo);
+		static_assert(APP_AUDIOEQ_BANDS == AUDIO_EQ_BANDS);
+		double eqGains[AUDIO_EQ_BANDS];
+		std::copy(std::begin(s.iAudioEqGains), std::end(s.iAudioEqGains), eqGains);
+		pASF->SetEqualizer(s.bAudioEqEnabled, s.bAudioEqPreventClip, eqGains, AUDIO_EQ_BANDS);
 	}
 
 	return hr;

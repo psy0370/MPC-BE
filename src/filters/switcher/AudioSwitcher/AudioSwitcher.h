@@ -61,6 +61,15 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7"))
 	std::list<std::pair<CStringA, CStringA>> m_afilters;
 	bool	m_bAudioFiltersDisableForStereo = false;
 
+	bool	m_bEqEnabled = false;
+	double	m_EqGains[AUDIO_EQ_BANDS] = {};
+	bool	m_bEqPreventClip = true;
+	double	m_dEqPreampFactor = 1.0;	// lowers the level by the peak boost of the EQ curve
+	unsigned m_nEqSamplerate = 0;		// sample rate the preamp was calculated for
+	// filter sets used to build the current m_AudioFilter graph
+	bool	m_bAFilterGraphUser = false;
+	bool	m_bAFilterGraphEq = false;
+
 	CDitherInt16 m_DitherInt16;
 
 	bool	m_bInt16;
@@ -77,6 +86,8 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7"))
 	REFERENCE_TIME m_rtNextStart;
 
 	void CheckSupportedOutputMediaType() override;
+	void AddEqualizerFilters(std::list<std::pair<CStringA, CStringA>>& filters, const unsigned samplerate);
+	void UpdateEqPreamp();
 
 public:
 	CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr);
@@ -103,6 +114,7 @@ public:
 	STDMETHODIMP SetAudioFilter1(const char* str_filter) override;
 	STDMETHODIMP_(int) GetAudioFilterState() override;
 	STDMETHODIMP SetAudioFiltersNotForStereo(bool bDisableForStereo) override;
+	STDMETHODIMP SetEqualizer(bool bEnable, bool bPreventClip, const double* pGains_dB, int nBands) override;
 
 	// IAMStreamSelect
 	STDMETHODIMP Enable(long lIndex, DWORD dwFlags) override;
